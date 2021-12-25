@@ -95,5 +95,36 @@ app.get("/passenger/:id", (req, res) => {
 //   await new_flight.save().then(() => res.json('flight is added')).catch(err => res.status(400).json('Error: ' + err))
 // });
 //------ to delete a flight--//
-
+app.get("/login", async (req, res) => {
+  if (req.session.userID) {
+    const passenger = await Passenger.findById(req.session.userID);
+    //console.log('here');
+    res.send({ loggedIn: true, user: passenger });
+  } else {
+    res.send({ loggedIn: false });
+  }
+});
+app.post("/login", async (req, res) => {
+  const username = req.body.username;
+  const password = req.body.password;
+  var passenger = await Passenger.findOne({ 'Email': username });
+  // find won't work here 
+  //passenger.toObject();
+  // console.log(passenger.Email);
+  if (passenger) {
+    bcrypt.compare(password, passenger.Password, (error, response) => {
+      if (error)
+        console.log(error);
+      if (response) {
+        req.session.userID = passenger._id;
+        //console.log(req.session.user);
+        res.send(passenger);
+      }
+      else
+        res.send({ message: "Wrong username/password combination!" });
+    });
+  }
+  else
+    res.send({ message: "User doesn't exist" });
+});
 
